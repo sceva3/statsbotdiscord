@@ -1,6 +1,7 @@
 import hikari
 import os
 from dotenv import load_dotenv
+import hikari.events.voice_events
 
 # apro il json
 
@@ -9,6 +10,13 @@ load_dotenv()
 
 token = os.getenv('TOKEN')
 
-bot = hikari.GatewayBot(token,intents=hikari.Intents.ALL_UNPRIVILEGED | hikari.Intents.MESSAGE_CONTENT )
-# funzione di ascolto del bot con esecuzione della risposta al comando ping
+# abilitato l'intento guild in particola il cambio di stato vocale
 
+bot = hikari.GatewayBot(token,intents=hikari.Intents.GUILD_VOICE_STATES | hikari.Intents.MESSAGE_CONTENT )
+
+'''
+@bot.listen()
+async def ping(event: hikari.events.voice_events) -> None:
+
+bot.run()
+'''
