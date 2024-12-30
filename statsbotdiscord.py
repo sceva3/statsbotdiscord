@@ -6,7 +6,9 @@ import hikari.guilds
 import datetime
 from pymongo import MongoClient
 
-user_times = {}
+# non ci serve più il dizionario
+
+#user_times = {}
 # carichiamo il .env file e otteniamo il token
 load_dotenv()
 
@@ -14,7 +16,7 @@ token = os.getenv('TOKEN')
 
 #URI DI mongodb
 
-MONGO_URI = os.getenv('MONGODB_URL')
+MONGO_URI = os.getenv('MONGO_URI')
 
 # configurazione di mongodb creazione oggetto cliente
 client = MongoClient(MONGO_URI)
@@ -43,19 +45,30 @@ async def listener(event: hikari.events.voice_events.VoiceStateUpdateEvent) -> N
     
     if event.old_state is None:  # L'utente è entrato in un canale
         join_time = now
-        user_times[user_id] = {"join_time": join_time, "exit_time": None}
-        # print(f"Utente {user_id} è entrato alle {join_time}.")
+        # user_times[user_id] = {"join_time": join_time, "exit_time": None}
+        collection.update_one(
+            {"user_id" : user_id},
+            {"$set": {"join_time": join_time, "exit_time" : None}},
+            upsert=True
+            
+        )
+        print(f"Utente {user_id} è entrato alle {join_time}.")
+        
+        
 
     elif event.state.channel_id is None:  # L'utente è uscito dal canale
-        if user_id in user_times and user_times[user_id]["join_time"] is not None:
+        user_data = collection.find_one({"user_id": user_id})
+        if user_data and "join_time" in user_data:
             exit_time = now
-            join_time = user_times[user_id]["join_time"]
+            join_time = user_data["join_time"]
             
-
-            user_times[user_id]["exit_time"] = exit_time
             time_spent = exit_time - join_time
+            collection.update_one(
+                {"user_id": user_id},
+                {"$set": {"exit_time": exit_time, "time_spent": str(time_spent)}}
+            )            
              
-            # print(f"Utente {user_id} è uscito alle {exit_time}. Tempo trascorso: {time_spent}.")
+            print(f"Utente {user_id} è uscito alle {exit_time}. Tempo trascorso: {time_spent}.")
 
 
 # come passso un valore dentro una funzione fuori?
